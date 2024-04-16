@@ -44,11 +44,15 @@ void importDevtree()
     pid_t pid = fork();
     if (pid == 0)
     {
+	log<level::ERR>(std::format("swetha: inside pid==0, executing attributes import")
+                            .c_str());
         std::string cmd("/usr/bin/attributes ");
         cmd += "import ";
         cmd += DEVTREE_EXP_FILE;
         cmd += " 2>";
-        cmd += " /dev/null";
+        cmd += " /var/lib/phal/error.txt";
+	log<level::ERR>(std::format("swetha: before execl")
+                            .c_str());
         execl("/bin/sh", "sh", "-c", cmd.c_str(), 0);
 
         auto error = errno;
@@ -62,6 +66,8 @@ void importDevtree()
         waitpid(pid, &status, 0);
         if (WEXITSTATUS(status))
         {
+	    log<level::ERR>(std::format("swetha: exit status: ({}) ", status)
+                            .c_str());
             log<level::ERR>("Failed to import attribute data");
             openpower::pel::createPEL("org.open_power.PHAL.Error.devtreeSync");
             return;
